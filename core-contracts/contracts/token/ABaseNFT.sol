@@ -53,7 +53,7 @@ abstract contract ABaseNFT is ISimpleNFT, Ownable, ERC721Enumerable, ERC721URISt
 
     function supportsInterface(
         bytes4 interfaceId
-    ) public view override(ERC721Enumerable, ERC721, IERC165) returns (bool) {
+    ) public view virtual override(ERC721Enumerable, ERC721, IERC165) returns (bool) {
         return interfaceId == type(ISimpleNFT).interfaceId || super.supportsInterface(interfaceId);
     }
 
