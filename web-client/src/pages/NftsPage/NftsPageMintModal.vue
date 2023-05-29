@@ -2,13 +2,13 @@
   <teleport-modal is-shown @click-outside="closeModal">
     <div class="nfts-page-mint-modal__form">
       <h4 class="nfts-page-mint-modal__title">
-        {{ $t('nfts-page-mint-modal.mint-title') }}
+        {{ $t("nfts-page-mint-modal.mint-title") }}
       </h4>
 
       <div v-if="!isFormDisabled" class="nfts-page-mint-modal__inputs">
         <div class="nfts-page-mint-modal__input-wrapper">
           <span class="nfts-page-mint-modal__input-title">
-            {{ $t('nfts-page-mint-modal.nft-link-title') }}
+            {{ $t("nfts-page-mint-modal.nft-link-title") }}
           </span>
           <input-field
             v-model="form.link"
@@ -18,13 +18,24 @@
             :error-message="getFieldErrorMessage('link')"
             @blur="touchField('link')"
           />
+
+          <span class="nfts-page-mint-modal__input-title">
+            {{ $t("nfts-page-mint-modal.nft-recipient-title") }}
+          </span>
+          <input-field
+            v-model="form.recipient"
+            class="nfts-page-mint-modal__input"
+            :placeholder="$t('nfts-page-mint-modal.nft-recipient-placeholder')"
+            :disabled="isFormDisabled"
+            :error-message="getFieldErrorMessage('recipient')"
+            @blur="touchField('recipient')" />
         </div>
       </div>
 
       <div v-if="isFormDisabled" class="nfts-page-mint-modal__loader-wrapper">
         <loader />
         <span class="nfts-page-mint-modal__loader-text">
-          {{ $t('nfts-page-mint-modal.loading-msg') }}
+          {{ $t("nfts-page-mint-modal.loading-msg") }}
         </span>
       </div>
 
@@ -46,59 +57,61 @@
 </template>
 
 <script lang="ts" setup>
-import { reactive } from 'vue'
-import { AppButton, TeleportModal, Loader } from '@/common'
-import { InputField } from '@/fields'
-import { useForm, useFormValidation } from '@/composables'
-import { required, url } from '@/validators'
-import { useErc721Store, useWeb3ProvidersStore } from '@/store'
-import { Bus, ErrorHandler } from '@/helpers'
-import { useI18n } from 'vue-i18n'
+import { reactive } from "vue";
+import { AppButton, TeleportModal, Loader } from "@/common";
+import { InputField } from "@/fields";
+import { useForm, useFormValidation } from "@/composables";
+import { required, url, ethAddress } from "@/validators";
+import { useErc721Store, useWeb3ProvidersStore } from "@/store";
+import { Bus, ErrorHandler } from "@/helpers";
+import { useI18n } from "vue-i18n";
 
 const emit = defineEmits<{
-  (e: 'close'): void
-  (e: 'save'): void
-}>()
+  (e: "close"): void;
+  (e: "save"): void;
+}>();
 
 const form = reactive({
-  name: '',
-  link: '',
-})
+  name: "",
+  link: "",
+  recipient: "",
+});
 
-const { t } = useI18n({ useScope: 'global' })
-const { isFormDisabled, disableForm, enableForm } = useForm()
-const { erc721 } = useErc721Store()
-const { provider } = useWeb3ProvidersStore()
+const { t } = useI18n({ useScope: "global" });
+const { isFormDisabled, disableForm, enableForm } = useForm();
+const { erc721 } = useErc721Store();
+const { provider } = useWeb3ProvidersStore();
 
 const { isFormValid, touchField, getFieldErrorMessage } = useFormValidation(
   form,
   {
     link: { required, url },
-  },
-)
+    recipient: { required , ethAddress }
+  }
+);
 
 const mintNft = async () => {
-  if (!isFormValid() || !provider.selectedAddress) return
-  disableForm()
+  if (!isFormValid() || !provider.selectedAddress) return;
+  disableForm();
   try {
     const tx = await erc721.mint(
-      provider.selectedAddress,
+      form.recipient,
       Date.now(),
-      form.link,
-    )
-    await tx?.wait()
-    Bus.success(t('nfts-page-mint-modal.success-mint'))
-    emit('save')
+      form.link
+    );
+    await tx?.wait();
+    Bus.success(t("nfts-page-mint-modal.success-mint"));
+    emit("save");
   } catch (error) {
-    ErrorHandler.process(error)
+    ErrorHandler.process(error);
   }
-  enableForm()
-}
+  enableForm();
+};
 
 const closeModal = () => {
-  if (isFormDisabled.value) return
-  emit('close')
-}
+  if (isFormDisabled.value) return;
+  emit("close");
+};
 </script>
 
 <style lang="scss" scoped>
